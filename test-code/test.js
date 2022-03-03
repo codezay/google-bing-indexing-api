@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const XLSX = require("xlsx");
 
-const excelFile = path.join(__dirname, "/excel-file", "upcoming matches.xlsx");
+const excelFile = path.join(__dirname, "../excel-file", "upcoming matches.xlsx");
 const xlFile = XLSX.readFile(excelFile);
 const workBook = xlFile.SheetNames;
 
@@ -13,9 +13,15 @@ for (let i = 0; i < workBook.length; i++) {
         xlFile.Sheets[xlFile.SheetNames[i]]
     );
     console.log(typeof tempData);
-    tempData.forEach((temp) => {
-        data.push(temp);
-    });
+    // tempData.forEach((temp) => {
+    //     data.push(temp);
+    // });
+    for (const key in tempData) {
+        if (tempData.hasOwnProperty.call(tempData, key)) {
+            const element = tempData[key];
+            console.log(element.URL);
+        }
+    }
 }
 
 console.log(path.basename(excelFile));

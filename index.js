@@ -35,12 +35,13 @@ for (let i = 0; i < workBook.length; i++) {
         xlFile.Sheets[xlFile.SheetNames[i]]
     );
 
-    tempData.forEach((temp) => {
-        links.push(temp);
-    });
+    for (const key in tempData) {
+        if (tempData.hasOwnProperty.call(tempData, key)) {
+            const element = tempData[key];
+            links.push(element);
+        }
+    }
 }
-
-// const links = fs.readFileSync("urls.txt").toString().split("\n");
 
 const indexURLs = async () => {
     const tokens = await jwtClient
