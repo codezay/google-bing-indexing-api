@@ -12,7 +12,7 @@ const jwtClient = new google.auth.JWT(
     null
 );
 
-const links = fs.readFileSync("urls.txt").toString().split("\n");
+const links = fs.readFileSync("../urls.txt").toString().split("\n");
 
 const urls = links.map((link) => {
     return {
