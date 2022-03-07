@@ -17,7 +17,7 @@ module.exports.indexLink = async (APIkey, body) => {
                     status: ${res.status}
                     statusText: ${res.statusText}`);
             } else {
-                logger.info(`Faile to index URL.
+                logger.info(`Failed to index URL.
                     url: ${body.url}
                     status: ${res.status}
                     statusText: ${res.statusText}`);
