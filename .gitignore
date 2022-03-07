@@ -109,3 +109,6 @@ combined.log
 
 # credentials for google api
 service_account.json
+google.json
+bing.json
+registeredURL.json

@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "google": "node -e \"require('./index').indexURLsWithGoogle()\"",
+    "bing": "node -e \"require('./index').indexURLsWithBing()\""
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +13,7 @@
     "bottleneck": "^2.19.5",
     "googleapis": "^95.0.0",
     "node-fetch": "^2.6.7",
+    "ping_bing": "^1.0.0",
     "winston": "^3.6.0",
     "xlsx": "^0.18.3"
   },
