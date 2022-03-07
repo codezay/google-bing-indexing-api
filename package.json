@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "google": "node -e \"require('./index').indexURLsWithGoogle()\"",
+    "bing": "node -e \"require('./index').indexURLsWithBing()\""
   },
   "author": "",
   "license": "ISC",

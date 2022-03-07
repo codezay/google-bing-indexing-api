@@ -1,49 +1,48 @@
 const fs = require("fs");
 const path = require("path");
-const fetch = require("node-fetch");
 const { google } = require("googleapis");
-const XLSX = require("xlsx");
 const Bottleneck = require("bottleneck");
+
+const logger = require("./app/custom_logger");
 
 const limiter = new Bottleneck({
     minTime: 500, //time in milliseconds
 });
 
-const credentials = require("./service_account.json");
-const logger = require("./app/custom_logger");
+// credentials
+const googleCredentials = require("./credentials/google.json");
+const bingCredentials = require("./credentials/bing.json");
+const registeredURL = require("./credentials/registeredURL.json");
+
+// controllers
+const FileController = require("./controllers/FileController");
+const GoogleController = require("./controllers/GoogleController");
+const BingController = require("./controllers/BingController");
 
 const jwtClient = new google.auth.JWT(
-    credentials.client_email,
+    googleCredentials.client_email,
     null,
-    credentials.private_key,
+    googleCredentials.private_key,
     ["https://www.googleapis.com/auth/indexing"],
     null
 );
 
-const excelFilePath = path.join(
+const excelFilePathForGoogle = path.join(
     __dirname,
-    "/excel-file",
-    "upcoming matches.xlsx"
+    "/excel-files/google",
+    "google.xlsx"
 );
-const xlFile = XLSX.readFile(excelFilePath);
-const workBook = xlFile.SheetNames;
 
-const links = [];
+const excelFilePathForBing = path.join(
+    __dirname,
+    "/excel-files/bing",
+    "bing.xlsx"
+);
 
-for (let i = 0; i < workBook.length; i++) {
-    const tempData = XLSX.utils.sheet_to_json(
-        xlFile.Sheets[xlFile.SheetNames[i]]
-    );
-
-    for (const key in tempData) {
-        if (tempData.hasOwnProperty.call(tempData, key)) {
-            const element = tempData[key];
-            links.push(element);
-        }
-    }
-}
-
-const indexURLs = async () => {
+// indexing links with google Api
+const indexURLsWithGoogle = async () => {
+    logger.info("Running Google Api.");
+    // authenticating the app
     const tokens = await jwtClient
         .authorize()
         .then((res) => {
@@ -56,40 +55,52 @@ const indexURLs = async () => {
             process.exit(1);
             // return;
         });
+    // access token from google api
+    const accessToken = tokens.access_token;
+    // formated data from excell file
+    const links = await FileController.formatXlFile(excelFilePathForGoogle);
 
-    for (const link of links) {
-        const body = { url: link.URL, type: "URL_UPDATED" };
+    // index all the links
+    await GoogleController.indexLinks(accessToken, links)
+        .then((resp) => {
+            logger.info("Process completed.");
+            logger.info(resp);
+        })
+        .catch((err) => {
+            logger.error("Error while indexing");
+            logger.error(err);
+        });
 
-        await fetch(
-            "https://indexing.googleapis.com/v3/urlNotifications:publish",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${tokens.access_token}`,
-                },
-                body: JSON.stringify(body),
-            }
-        )
-            .then((res) => {
-                if (res.status === 200) {
-                    logger.info(`url indexed successfully.
-                        url: ${link.URL}
-                        status: ${res.status}
-                        statusText: ${res.statusText}`);
-                } else {
-                    logger.error(`failed to index url.
-                        url: ${link.URL}
-                        status: ${res.status}
-                        statusText: ${res.statusText}`);
-                }
-            })
-            .catch((err) => {
-                logger.error("failed to run fetch");
-                logger.error(err);
-            });
-    }
+    logger.info("Finished running Google Api.");
+    return;
 };
 
-// indexURLs();
-limiter.schedule(() => indexURLs());
+// indexing links with Bing Api
+const indexURLsWithBing = async () => {
+    logger.info("Running Bing Api.");
+    // registered website domain
+    const regURL = registeredURL.siteUrl;
+    // bing API Key
+    const APIkey = bingCredentials.APIkey;
+    // formated data from excell file
+    const links = await FileController.formatXlFile(excelFilePathForBing);
+
+    // index all the links
+    await BingController.indexLinks(regURL, APIkey, links)
+        .then((resp) => {
+            logger.info("Process Completed");
+            logger.info(resp);
+        })
+        .catch((err) => {
+            logger.error("Error while indexing");
+            logger.error(err);
+        });
+
+    logger.info("Finished running Bing Api");
+    return;
+};
+
+module.exports = {
+    indexURLsWithGoogle,
+    indexURLsWithBing,
+};
